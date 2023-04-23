@@ -3,10 +3,10 @@ NODES = "nodes"
 SOURCE = "source"
 SINK = "sink"
 ARCS = "arcs"
-MAXIMIZE = "Maximize \n"
-SUBJECT_TO = "Subject to \n"
-BOUNDS = "Bounds \n"
-END = "End"
+MAXIMIZE = "maximize \n"
+SUBJECT_TO = "subject to \n"
+BOUNDS = "bounds \n"
+END = "end"
 OBJ = "obj: "
 
 
@@ -57,9 +57,10 @@ class ModelGenerator:
             self.nodes = value
             self.arcs = [[0 for _ in range(self.nodes)] for _ in range(self.nodes)]
         elif arg == SOURCE:
+            print("source" + str(value))
             self.source = value
         elif arg == SINK:
-            self.source = value
+            self.sink = value
         elif arg == ARCS:
             pass  # TODO Don't know what to do with it
         else:
@@ -72,12 +73,14 @@ class ModelGenerator:
         :param j: Node j that has ingoing arc
         :param cost: Cost of arc i to j
         """
-        self.arcs[i][j] = cost
+        if i != j:
+            self.arcs[i][j] = cost
 
     def write_objective(self):
         """
         Write objective text to be added to model file
         """
+        print(str(self.source) + "a source")
         has_outgoing_arcs, outgoing_arcs_string = self.write_line_outgoing_arcs(self.source)
         self.objective += outgoing_arcs_string + "\n"
 
@@ -163,5 +166,5 @@ class ModelGenerator:
             model_out.write(END)
 
 
-a = ModelGenerator("instances/inst-100-0.2.txt")
+a = ModelGenerator("instances/inst-100-0.1.txt")
 a.write_model()
