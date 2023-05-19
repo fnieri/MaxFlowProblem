@@ -43,7 +43,6 @@ class FF_solver(Flow_graph):
     def bfs_phase(self, node, flow):
         if node == self.sink:
             return []
-
         self.visited[node] = self.visitedToken
         q = deque([(node, [])])  # Queue to track current node and path
         while q:

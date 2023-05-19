@@ -21,11 +21,12 @@ def parse_file(file_path):
             except ValueError:
                 print("Error parsing line: " + line)
         return dSolver
-dsolver = parse_file("instances/inst-1500-0.3.txt")
 
-print("done parsing")
-input()
-t1 = time()
-print(dsolver.get_max_flow())
-t2 = time()
-print(t2-t1)
+# dsolver = parse_file("instances/inst-1500-0.3.txt")
+
+# print("done parsing")
+# input()
+# t1 = time()
+# print(dsolver.get_max_flow())
+# t2 = time()
+# print(t2-t1)

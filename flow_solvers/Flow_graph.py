@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from collections import deque
+
 from flow_solvers.Edge import Edge
 
 class Flow_graph(ABC):
@@ -28,9 +30,9 @@ class Flow_graph(ABC):
         for node in self.get_adj_list():
             for edge in node:
                 i += 1
-                print(edge.node_i, edge.node_j, edge.capacity)
+                print(edge.node_i, edge.node_j, edge.capacity, edge.flow)
 
-    def get_outgoing_edges(self, node: int) -> list[Edge]:
+    def get_outgoing_edges(self, node: int):
         return self.adj_list[node]
 
     def get_adj_list(self):
@@ -51,6 +53,72 @@ class Flow_graph(ABC):
         for edge in path:
             edge.augment(bottleneck)
         return bottleneck
+
+    def export_graph(self, filename):
+        with open(filename, 'w') as file:
+            # Write headers
+            file.write("{:<8}  {:<8}  {:<8}  {:<8}\n".format("node_i", "node_j", "capacity", "flow"))
+
+            # Write edge information
+            for node_i, edges in enumerate(self.get_adj_list()):
+                for edge in edges:
+                    file.write("{:<8}  {:<8}  {:<8}  {:<8}\n".format(edge.node_i, edge.node_j, edge.capacity, edge.flow))
+
+    def verify_optimality(self):
+        # Perform a graph traversal starting from the source node
+        visited = [False] * self.num_nodes
+        stack = [self.source]
+        visited[self.source] = True
+
+        while stack:
+            node = stack.pop()
+            for edge in self.get_outgoing_edges(node):
+                is_unvisited_node = not visited[edge.node_j]
+                if is_unvisited_node and edge.is_rem_capacity_positive():
+                    visited[edge.node_j] = True
+                    stack.append(edge.node_j)
+
+        # Check the optimality of the flow solution
+        for node in range(self.num_nodes):
+            for edge in self.get_outgoing_edges(node):
+                if visited[edge.node_i] and not visited[edge.node_j] and edge.is_rem_capacity_positive():
+                    return False
+
+        return True
+
+    def identify_min_cut(self):
+        # Perform BFS to compute reachable nodes from the source
+        reachable = self._bfs_for_mincut()
+
+        # Compute the minimum cut value
+        min_cut_value = self._compute_min_cut_value(reachable)
+
+        return min_cut_value
+
+    def _bfs_for_mincut(self):
+        # Perform BFS to compute reachable nodes from the source
+        visited = [False] * self.num_nodes
+        q = deque()
+        q.append(self.source)
+        visited[self.source] = True
+
+        while q:
+            node = q.popleft()
+            for edge in self.get_outgoing_edges(node):
+                if edge.remaining_capacity() > 0 and not visited[edge.node_j]:
+                    visited[edge.node_j] = True
+                    q.append(edge.node_j)
+
+        return visited
+
+    def _compute_min_cut_value(self, reachable):
+        min_cut_value = 0
+        for node in range(self.num_nodes):
+            for edge in self.get_outgoing_edges(node):
+                if reachable[edge.node_i] and not reachable[edge.node_j]:
+                    min_cut_value += edge.capacity
+        return min_cut_value
+
 
     @abstractmethod
     def solve_max_flow(self):
