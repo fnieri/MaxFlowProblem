@@ -23,20 +23,10 @@ class Flow_graph(ABC):
         self.get_outgoing_edges(node_i).append(e1)
         self.get_outgoing_edges(node_j).append(e2)
 
-    def print_graph(self):
-        print("Graph:")
-        print("node_i, node_j, capacity, flow")
-        i = 0
-        for node in self.get_adj_list():
-            for edge in node:
-                i += 1
-                print(edge.node_i, edge.node_j, edge.capacity, edge.flow)
+
 
     def get_outgoing_edges(self, node: int):
         return self.adj_list[node]
-
-    def get_adj_list(self):
-        return self.adj_list
 
     def get_max_flow(self):
         self.solve()
@@ -52,18 +42,7 @@ class Flow_graph(ABC):
         bottleneck = min(edge.remaining_capacity() for edge in path)
         for edge in path:
             edge.augment(bottleneck)
-        return bottleneck
-
-    def export_graph(self, filename):
-        with open(filename, 'w') as file:
-            # Write headers
-            file.write("{:<8}  {:<8}  {:<8}  {:<8}\n".format("node_i", "node_j", "capacity", "flow"))
-
-            # Write edge information
-            for node_i, edges in enumerate(self.get_adj_list()):
-                for edge in edges:
-                    file.write("{:<8}  {:<8}  {:<8}  {:<8}\n".format(edge.node_i, edge.node_j, edge.capacity, edge.flow))
-        print("Graph exported to {}".format(filename))
+        self.max_flow+= bottleneck
 
     def identify_min_cut(self):
         # Perform BFS to compute reachable nodes from the source
@@ -79,14 +58,12 @@ class Flow_graph(ABC):
         q = deque()
         q.append(self.source)
         visited[self.source] = True
-
         while q:
             node = q.popleft()
             for edge in self.get_outgoing_edges(node):
                 if edge.remaining_capacity() > 0 and not visited[edge.node_j]:
                     visited[edge.node_j] = True
                     q.append(edge.node_j)
-
         return visited
 
     def _compute_min_cut_value(self, reachable):
@@ -96,6 +73,29 @@ class Flow_graph(ABC):
                 if reachable[edge.node_i] and not reachable[edge.node_j]:
                     min_cut_value += edge.capacity
         return min_cut_value
+
+    ## Printing and exporting
+    def print_graph(self):
+        print("Graph:")
+        print("node_i, node_j, capacity, flow")
+        i = 0
+        for node in self.adj_list:
+            for edge in node:
+                i += 1
+                print(edge.node_i, edge.node_j, edge.capacity, edge.flow)
+
+
+    def export_graph(self, filename):
+        with open(filename, 'w') as file:
+            # Write headers
+            file.write("{:<8}  {:<8}  {:<8}  {:<8}\n".format("node_i", "node_j", "capacity", "flow"))
+
+            # Write edge information
+            for node_i, edges in enumerate(self.adj_list):
+                for edge in edges:
+                    file.write("{:<8}  {:<8}  {:<8}  {:<8}\n".format(edge.node_i, edge.node_j, edge.capacity, edge.flow))
+        print("Graph exported to {}".format(filename))
+
 
 
     @abstractmethod

@@ -15,9 +15,7 @@ for i in range(1, 15):
         solveDensity1tmp = []
         solveDensity2tmp = []
         solveDensity3tmp = []
-
         for line in file:
-
             instance, generate_time, solve_time= line.strip().split(",")
             timesToGenerate.append(float(generate_time))
             timesToSolve.append(float(solve_time))
