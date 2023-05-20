@@ -63,6 +63,7 @@ class Flow_graph(ABC):
             for node_i, edges in enumerate(self.get_adj_list()):
                 for edge in edges:
                     file.write("{:<8}  {:<8}  {:<8}  {:<8}\n".format(edge.node_i, edge.node_j, edge.capacity, edge.flow))
+        print("Graph exported to {}".format(filename))
 
     def identify_min_cut(self):
         # Perform BFS to compute reachable nodes from the source
