@@ -12,9 +12,9 @@ class FF_solver(Flow_graph):
 
     def solve_max_flow(self):
         if self.use_bfs:
-            find_aug_path_method = self.bfs_phase
+            find_aug_path_method = self.bfs_edmonds_karp
         else:
-            find_aug_path_method = self.dfs_phase
+            find_aug_path_method = self.dfs_classic_ff
         path = find_aug_path_method(self.source, INFINITY)
         while path is not None:
             self.max_flow += self.augment_path(path)
@@ -22,7 +22,7 @@ class FF_solver(Flow_graph):
             path = find_aug_path_method(self.source, INFINITY)
 
 
-    def dfs_phase(self, node, flow):
+    def dfs_classic_ff(self, node, flow):
         if node == self.sink:
             return []
 
@@ -40,7 +40,7 @@ class FF_solver(Flow_graph):
                     stack.append((edge.node_j, new_flow, new_path))  # Push the next node, new flow, and new path to the stack
         return None  # If no augmenting path is found, return None
 
-    def bfs_phase(self, node, flow):
+    def bfs_edmonds_karp(self, node, flow):
         if node == self.sink:
             return []
         self.visited[node] = self.visitedToken

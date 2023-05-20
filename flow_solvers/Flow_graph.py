@@ -64,32 +64,9 @@ class Flow_graph(ABC):
                 for edge in edges:
                     file.write("{:<8}  {:<8}  {:<8}  {:<8}\n".format(edge.node_i, edge.node_j, edge.capacity, edge.flow))
 
-    def verify_optimality(self):
-        # Perform a graph traversal starting from the source node
-        visited = [False] * self.num_nodes
-        stack = [self.source]
-        visited[self.source] = True
-
-        while stack:
-            node = stack.pop()
-            for edge in self.get_outgoing_edges(node):
-                is_unvisited_node = not visited[edge.node_j]
-                if is_unvisited_node and edge.is_rem_capacity_positive():
-                    visited[edge.node_j] = True
-                    stack.append(edge.node_j)
-
-        # Check the optimality of the flow solution
-        for node in range(self.num_nodes):
-            for edge in self.get_outgoing_edges(node):
-                if visited[edge.node_i] and not visited[edge.node_j] and edge.is_rem_capacity_positive():
-                    return False
-
-        return True
-
     def identify_min_cut(self):
         # Perform BFS to compute reachable nodes from the source
         reachable = self._bfs_for_mincut()
-
         # Compute the minimum cut value
         min_cut_value = self._compute_min_cut_value(reachable)
 

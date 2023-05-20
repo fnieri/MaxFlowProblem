@@ -12,10 +12,10 @@ class Dinitz_solver(Flow_graph):
             # Reset every iteration to allow taking previously forbidden edges
             next = [0] * self.num_nodes
             # Find max flow by adding all augmenting path flows.
-            path = self.dfs_phase(self.source, next, INFINITY)
+            path = self.dfs_phase(self.source, next)
             while path is not None:
                 self.max_flow += self.augment_path(path)
-                path = self.dfs_phase(self.source, next, INFINITY)
+                path = self.dfs_phase(self.source, next)
 
     # Computes the level of each node in the graph using BFS
     def bfs_phase(self):
@@ -34,9 +34,8 @@ class Dinitz_solver(Flow_graph):
         return self.level[self.sink] != -1
 
 
-
     #Finds an augmenting path from source to sink using DFS
-    def dfs_phase(self, curr_node, next, flow, path=[]):
+    def dfs_phase(self, curr_node, next, path=[]):
         if curr_node == self.sink:
             return path
         num_edges = len(self.get_outgoing_edges(curr_node))
@@ -44,9 +43,7 @@ class Dinitz_solver(Flow_graph):
             edge = self.get_outgoing_edges(curr_node)[next[curr_node]]
             is_progressive_edge = self.level[edge.node_j] == self.level[curr_node] + 1
             if edge.is_rem_capacity_positive() and is_progressive_edge:
-                bottleneck = min(flow, edge.remaining_capacity())
-                if bottleneck > 0:
-                    result_path = self.dfs_phase(edge.node_j, next, bottleneck, path + [edge])
+                    result_path = self.dfs_phase(edge.node_j, next, path + [edge])
                     if result_path is not None:
                         return result_path
             next[curr_node] += 1

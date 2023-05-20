@@ -16,16 +16,23 @@ def measure_resolution_time(flow_graph):
 def process_instances(directory, num_iterations):
     instances = os.listdir(directory)
     results = []
+    nodes = 0
+    edges = 0
     for instance in instances:
-        if instance[8] == "-":
-            continue
-        for _ in range(num_iterations):
-            file_path = os.path.join(directory, instance)
-            flow_graph = parse_file(file_path)
-            resolution_times = []
-            max_flows = []
-            resolution_time, max_flow = measure_resolution_time(flow_graph)
-            results.append((file_path, resolution_time, max_flow))
+        file_path = os.path.join(directory, instance)
+        y = get_instance_size(file_path)
+        nodes += y[0]
+        edges += y[1]
+        # if instance[8] == "-":
+        #     continue
+        # for _ in range(num_iterations):
+        #     file_path = os.path.join(directory, instance)
+        #     flow_graph = parse_file(file_path)
+        #     resolution_times = []
+        #     max_flows = []
+        #     resolution_time, max_flow = measure_resolution_time(flow_graph)
+        #     results.append((file_path, resolution_time, max_flow))
+    print(nodes/len(instances), edges/len(instances))
     return results
 
 
