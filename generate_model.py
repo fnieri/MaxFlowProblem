@@ -1,6 +1,6 @@
 import os
 import sys
-import time
+
 NODES = "nodes"
 SOURCE = "source"
 SINK = "sink"
@@ -11,9 +11,6 @@ BOUNDS = "Bounds \n"
 END = "End\n"
 OBJ = "obj: "
 
-timesToGenerate = []
-timesToSolve = []
-instances = []
 
 class ModelGenerator:
     def __init__(self, filename: str):
@@ -30,7 +27,10 @@ class ModelGenerator:
 
     def setModelName(self):
         """Generate the model name"""
-        self.modelName = self.filename.replace("inst", "model").replace(".txt", "")
+        filenameWithoutPath = os.path.basename(self.filename)
+        modelFilename =  filenameWithoutPath.replace("inst", "model").replace(".txt", "")
+        filePath = os.path.dirname(self.filename)
+        self.modelName = filePath + os.path.sep + modelFilename
 
     def setUpAttributes(self):
         """
@@ -43,7 +43,7 @@ class ModelGenerator:
                     self.setUpProperties(*arguments)
                 elif arguments:
                     if tuple(arguments[:2]) not in self.alreadyAddedLines:
-                        self.alreadyAddedLines.add((arguments[0], arguments[1]))
+                        self.alreadyAddedLines.add(tuple(arguments[:2]))
                         self.addArc(*arguments)
 
     def setUpProperties(self, arg: str, value: str):
@@ -67,7 +67,8 @@ class ModelGenerator:
 
     def addArc(self, source: str, destination: str, flow: str):
         """
-        Add an arc from the source to the 2
+        Add an arc from the source node to the destination node
+        Build the bound constraint with the flow as upper bound
         """
         if source != destination: #and source != self.sink and destination != self.source:
             self.bounds.append(f"0 <= x_{source}_{destination} <= {flow}")
@@ -78,9 +79,7 @@ class ModelGenerator:
         """
         Build problem constraints
         """
-        #Add flow formulation
         for node in map(str, range(self.nodes)):
-            #Add objective
             if node == self.source:
                 self.objective = "".join(self.subjectTo[int(node)][4:]) + "\n"
             self.subjectTo[int(node)] += f" {'>=' if node == self.source else '<=' if node == self.sink else '='} 0"
@@ -88,7 +87,6 @@ class ModelGenerator:
     def writeToFile(self):
         """
         Write objective, constraints and bounds to file
-        :return:
         """
         self.subjectTo = "\n".join(self.subjectTo) + "\n"
         self.bounds = "\n".join(self.bounds) + "\n"
@@ -97,23 +95,20 @@ class ModelGenerator:
             modelOut.write(modelContent)
 
     def generateModel(self):
-        startTime = time.time()
         self.setModelName()
         self.setUpAttributes()
         self.buildConstraints()
         self.writeToFile()
-        endTime = time.time()
-        timesToGenerate.append(endTime - startTime)
 
     def solveModel(self):
+        """
+        Solve model using glpsol --lp
+        """
         self.generateModel()
-        startTime = time.time()
         os.system(f"glpsol --lp {self.modelName}.lp -o {self.modelName}.sol > /dev/null")
-        endTime = time.time()
-        timesToSolve.append(endTime - startTime)
 
 
-class Graph:
+class GLPKFlowGraph:
     def __init__(self, nodes, source, sink, filename):
         self.flowGraph = [[0 for i in range(nodes)] for _ in range(nodes)]
         self.maxCapacityGraph = [[0 for i in range(nodes)] for _ in range(nodes)]
@@ -137,10 +132,10 @@ class Graph:
                             source, destination = int(source), int(destination)
                             self.flowGraph[source][destination] = flow
                             self.maxCapacityGraph[source][destination] = capacity
-
                     except ValueError:
                         break
                 if columns and columns[0] == "No.":
+
                     count += 1
 
     def findSTCut(self):
@@ -165,28 +160,15 @@ class Graph:
 def main(filename: str):
     model_gen = ModelGenerator(filename)
     model_gen.solveModel()
-    graph = Graph(model_gen.nodes, model_gen.source, model_gen.sink, model_gen.modelName)
-
+    graph = GLPKFlowGraph(model_gen.nodes, model_gen.source, model_gen.sink, model_gen.modelName)
+    print("GLPK Solution is optimal: ", graph.isOptimal())
 
 if __name__ == "__main__":
     try:
-        filename = sys.argv[1]
-      #  main(filename)
+        instanceToSolve = sys.argv[1]
+        main(instanceToSolve)
     except IndexError:
         print("Enter a filename")
-    instance = 0
-    for nodes in range(100, 1600, 100):
-        for density in range(1, 4):
-            generate_model = f"Instances/inst-{nodes}-0.{density}.txt"
-            generator = ModelGenerator(generate_model)
-            generator.solveModel()
-            # graph = Graph(generator.nodes, generator.source, generator.sink, generator.modelName)
-            # print(graph.isOptimal())
-            instances.append(instance)
-            instance += 1
-    with open("results14.txt", "w") as result_file:
-        for instance, generate_time, solve_time in zip(instances, timesToGenerate, timesToSolve):
-            result_file.write(f"{instance}, {generate_time}, {solve_time}\n")
 
 
 
