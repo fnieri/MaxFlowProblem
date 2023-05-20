@@ -1,8 +1,6 @@
 import os
 import sys
-from collections import defaultdict
 import time
-import matplotlib.pyplot as plt
 NODES = "nodes"
 SOURCE = "source"
 SINK = "sink"
@@ -16,8 +14,6 @@ OBJ = "obj: "
 timesToGenerate = []
 timesToSolve = []
 instances = []
-arcs = []
-
 
 class ModelGenerator:
     def __init__(self, filename: str):
@@ -73,7 +69,7 @@ class ModelGenerator:
         """
         Add an arc from the source to the 2
         """
-        if source != destination and source != self.sink and destination != self.source:
+        if source != destination: #and source != self.sink and destination != self.source:
             self.bounds.append(f"0 <= x_{source}_{destination} <= {flow}")
             self.subjectTo[int(source)] += f" + x_{source}_{destination}"
             self.subjectTo[int(destination)] += f" - x_{source}_{destination}"
@@ -112,7 +108,7 @@ class ModelGenerator:
     def solveModel(self):
         self.generateModel()
         startTime = time.time()
-        os.system(f"glpsol --lp {self.modelName}.lp -o {self.modelName}.sol")
+        os.system(f"glpsol --lp {self.modelName}.lp -o {self.modelName}.sol > /dev/null")
         endTime = time.time()
         timesToSolve.append(endTime - startTime)
 
@@ -165,61 +161,32 @@ class Graph:
         self.findSTCut()
         return self.sink not in self.visited
 
-def main():
+
+def main(filename: str):
+    model_gen = ModelGenerator(filename)
+    model_gen.solveModel()
+    graph = Graph(model_gen.nodes, model_gen.source, model_gen.sink, model_gen.modelName)
+
+
+if __name__ == "__main__":
+    try:
+        filename = sys.argv[1]
+      #  main(filename)
+    except IndexError:
+        print("Enter a filename")
     instance = 0
     for nodes in range(100, 1600, 100):
         for density in range(1, 4):
             generate_model = f"Instances/inst-{nodes}-0.{density}.txt"
             generator = ModelGenerator(generate_model)
             generator.solveModel()
-            graph = Graph(generator.nodes, generator.source, generator.sink, generator.modelName)
-            print(graph.isOptimal())
-            
-#def main(filename: str):
- #   model_gen = ModelGenerator(filename)
-  #  model_gen.solveModel()
-   # graph = Graph(model_gen.nodes, model_gen.source, model_gen.sink, model_gen.modelName)
-    #print(graph.isOptimal())
+            # graph = Graph(generator.nodes, generator.source, generator.sink, generator.modelName)
+            # print(graph.isOptimal())
+            instances.append(instance)
+            instance += 1
+    with open("results14.txt", "w") as result_file:
+        for instance, generate_time, solve_time in zip(instances, timesToGenerate, timesToSolve):
+            result_file.write(f"{instance}, {generate_time}, {solve_time}\n")
 
-if __name__ == "__main__":
-    try:
-        filename = sys.argv[1]
-        #main(filename)
-        main()
-    except IndexError:
-        print("Enter a filename")
-    """
-    with open("results.txt", "r") as file:
-        for line in file:
-            instance, generate_time, solve_time, arc = line.strip().split(",")
-            instances.append(int(instance))
-            timesToGenerate.append(float(generate_time))
-            timesToSolve.append(float(solve_time))
-            arcs.append(int(arc))
-
-    plt.plot(instances, timesToGenerate, marker='o', linestyle='-',label="Time to generate instance")
-    plt.plot(instances, timesToSolve, marker='o', linestyle='-', label="Time to solve instance")
-    plt.xlabel("Instance number")
-    plt.ylabel("Time")
-    # Adjust the x-axis tick spacing
-    plt.xticks(instances[::10])  # Set the x-axis ticks at every 10th instance
-    plt.xticks(rotation=45, ha='right')  # Rotate the x-axis labels by 45 degrees and align them to the right
-    plt.scatter(instances, timesToGenerate, color='red')
-    plt.scatter(instances, timesToSolve, color='blue')
-
-    plt.legend()
-    plt.show()
-
-    for j in range(len(arcs)-1):
-        for i in range(len(arcs)-1):
-            if arcs[i] > arcs[i+1]:
-                arcs[i], arcs[i+1] = arcs[i+1], arcs[i]
-                timesToSolve[i], timesToSolve[i+1] = timesToSolve[i+1], timesToSolve[i]
-                timesToGenerate[i], timesToGenerate[i+1] = timesToGenerate[i+1], timesToGenerate[i]
-    plt.plot(arcs, timesToSolve)
-    plt.xlabel("Number of arcs")
-    plt.ylabel("Time to solve")
-    plt.show()
-    """
 
 
