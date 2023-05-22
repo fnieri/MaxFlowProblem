@@ -61,7 +61,7 @@ class Flow_graph(ABC):
         while q:
             node = q.popleft()
             for edge in self.get_outgoing_edges(node):
-                if edge.remaining_capacity() > 0 and not visited[edge.node_j]:
+                if edge.remaining_capacity() > 0 and not visited[edge.node_j]: # If there is capacity and the node has not been visited, ie: in the original graph and not in the residual graph
                     visited[edge.node_j] = True
                     q.append(edge.node_j)
         return visited
