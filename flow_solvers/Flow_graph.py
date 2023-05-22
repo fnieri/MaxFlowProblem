@@ -87,6 +87,10 @@ class Flow_graph(ABC):
 
     def export_graph(self, filename):
         with open(filename, 'w') as file:
+            file.write("Max flow: {}\n".format(self.max_flow))
+            file.write("Total nodes: {}\n".format(self.num_nodes))
+            file.write("Source: {}\n".format(self.source))
+            file.write("Sink: {}\n".format(self.sink))
             # Write headers
             file.write("{:<8}  {:<8}  {:<8}  {:<8}\n".format("node_i", "node_j", "capacity", "flow"))
 
