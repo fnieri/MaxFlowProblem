@@ -27,10 +27,7 @@ class ModelGenerator:
 
     def setModelName(self):
         """Generate the model name"""
-        filenameWithoutPath = os.path.basename(self.filename)
-        modelFilename =  filenameWithoutPath.replace("inst", "model").replace(".txt", "")
-        filePath = os.path.dirname(self.filename)
-        self.modelName = filePath + os.path.sep + modelFilename
+        self.modelName = self.filename.replace("inst", "model").replace(".txt", "")
 
     def setUpAttributes(self):
         """
@@ -105,7 +102,7 @@ class ModelGenerator:
         Solve model using glpsol --lp
         """
         self.generateModel()
-        os.system(f"glpsol --lp {self.modelName}.lp -o {self.modelName}.sol > /dev/null")
+        os.system(f"glpsol --lp {self.modelName}.lp -o {self.modelName}.sol")
 
 
 class GLPKFlowGraph:
@@ -158,9 +155,10 @@ class GLPKFlowGraph:
 
 
 def main(filename: str):
-    model_gen = ModelGenerator(filename)
-    model_gen.solveModel()
-    graph = GLPKFlowGraph(model_gen.nodes, model_gen.source, model_gen.sink, model_gen.modelName)
+    generator = ModelGenerator(filename)
+    generator.solveModel()
+    print(f"Found solution for {generator.modelName}")
+    graph = GLPKFlowGraph(generator.nodes, generator.source, generator.sink, generator.modelName)
     print("GLPK Solution is optimal: ", graph.isOptimal())
 
 if __name__ == "__main__":
@@ -169,6 +167,8 @@ if __name__ == "__main__":
         main(instanceToSolve)
     except IndexError:
         print("Enter a filename")
+    except FileNotFoundError:
+        print("Enter a correct filename")
 
 
 
