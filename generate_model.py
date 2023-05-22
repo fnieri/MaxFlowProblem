@@ -1,15 +1,15 @@
 import os
 import sys
 
-_n_o_d_e_s = "nodes"
-_s_o_u_r_c_e = "source"
-_s_i_n_k = "sink"
-_a_r_c_s = "arcs"
-_m_a_x_i_m_i_z_e = "Maximize \n"
-_s_u_b_j_e_c_t__t_o = "Subject To \n"
-_b_o_u_n_d_s = "Bounds \n"
-_e_n_d = "End\n"
-_o_b_j = "obj: "
+NODES = "nodes"
+SOURCE = "source"
+SINK = "sink"
+ARCS = "arcs"
+MAXIMIZE = "Maximize \n"
+SUBJECT_TO = "Subject To \n"
+BOUNDS = "Bounds \n"
+END = "End\n"
+OBJ = "obj: "
 
 
 class GLPK_Solver:
@@ -27,7 +27,10 @@ class GLPK_Solver:
 
     def set_model_name(self):
         """Generate the model name"""
-        self.model_name = self.filename.replace("inst", "model").replace(".txt", "")
+        filename = os.path.basename(self.filename)
+        modelFilename =  filename.replace("inst", "model").replace(".txt", "")
+        dir_path = os.path.dirname(self.filename)
+        self.model_name =  os.path.join(dir_path, modelFilename)
 
     def set_up_attributes(self):
         """
@@ -50,14 +53,14 @@ class GLPK_Solver:
         :param value: The value that has to be set
         :return:
         """
-        if arg == _n_o_d_e_s:
+        if arg == NODES:
             self.nodes = int(value)
             self.subject_to = [f"x_{node}: " for node in range(self.nodes)]
-        elif arg == _s_o_u_r_c_e:
+        elif arg == SOURCE:
             self.source = value
-        elif arg == _s_i_n_k:
+        elif arg == SINK:
             self.sink = value
-        elif arg == _a_r_c_s:
+        elif arg == ARCS:
             self.arcs = int(value)
         else:
             raise Exception
@@ -87,7 +90,7 @@ class GLPK_Solver:
         """
         self.subject_to = "\n".join(self.subject_to) + "\n"
         self.bounds = "\n".join(self.bounds) + "\n"
-        model_content = f"{_m_a_x_i_m_i_z_e + _o_b_j}{self.objective}{_s_u_b_j_e_c_t__t_o}{self.subject_to}{_b_o_u_n_d_s}{self.bounds}{_e_n_d}"
+        model_content = f"{MAXIMIZE + OBJ}{self.objective}{SUBJECT_TO}{self.subject_to}{BOUNDS}{self.bounds}{END}"
         with open(self.model_name + ".lp", "w") as model_out:
             model_out.write(model_content)
 
