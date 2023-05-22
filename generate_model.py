@@ -33,8 +33,8 @@ class ModelGenerator:
         """
         Set up class values and add arcs string
         """
-        with open(self.filename, "r") as flot_instance:
-            for line in flot_instance:
+        with open(self.filename, "r") as flotInstance:
+            for line in flotInstance:
                 arguments = line.split()
                 if len(arguments) == 2:
                     self.setUpProperties(*arguments)
@@ -67,7 +67,7 @@ class ModelGenerator:
         Add an arc from the source node to the destination node
         Build the bound constraint with the flow as upper bound
         """
-        if source != destination: #and source != self.sink and destination != self.source:
+        if source != destination:
             self.bounds.append(f"0 <= x_{source}_{destination} <= {flow}")
             self.subjectTo[int(source)] += f" + x_{source}_{destination}"
             self.subjectTo[int(destination)] += f" - x_{source}_{destination}"
